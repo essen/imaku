@@ -14,7 +14,8 @@
 
 -record(state, {
 	frame,
-	canvas
+	canvas,
+	timer
 }).
 
 %% API.
@@ -30,8 +31,8 @@ init([]) ->
 
 	Frame = wxFrame:new(wx:null(), ?wxID_ANY, "imaku", [
 		{size, {960, 540}},
-		{style, (?wxDEFAULT_FRAME_STYLE
-					bxor (?wxRESIZE_BORDER bor ?wxMAXIMIZE_BOX))
+		{style, ?wxDEFAULT_FRAME_STYLE
+					bxor (?wxRESIZE_BORDER bor ?wxMAXIMIZE_BOX)
 				band ?wxBORDER_NONE}
 	]),
 	wxFrame:show(Frame),
@@ -65,25 +66,29 @@ init([]) ->
 
 	wxFrame:layout(Frame),
 
-	gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT),
-	wxGLCanvas:swapBuffers(Canvas),
+	Timer = timer:send_interval(16, self(), update),
 
-	{Frame, #state{frame=Frame, canvas=Canvas}}.
+	{Frame, #state{frame=Frame, canvas=Canvas, timer=Timer}}.
 
-handle_call(Msg, _From, State) ->
-	{reply,ok,State}.
+handle_call(_Msg, _From, State) ->
+	{reply, ok, State}.
 
 handle_event(#wx{event=#wxClose{}}, State) ->
 	{stop, normal, State};
-handle_event(Ev,State) ->
+handle_event(_Event, State) ->
 	{noreply, State}.
 
-handle_info(Msg, State) ->
-	{noreply,State}.
+handle_info(update, State=#state{canvas=Canvas}) ->
+	gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT),
+	wxGLCanvas:swapBuffers(Canvas),
+	{noreply, State};
+handle_info(_Msg, State) ->
+	{noreply, State}.
 
 code_change(_, _, State) ->
 	{stop, not_yet_implemented, State}.
 
-terminate(_Reason, _State) ->
+terminate(_Reason, #state{timer=Timer}) ->
+	timer:cancel(Timer),
 	wx:destroy(),
 	application:stop(imaku).
