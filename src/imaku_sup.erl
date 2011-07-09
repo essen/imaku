@@ -18,5 +18,7 @@ start_link() ->
 
 init([]) ->
 	Procs = [
+		{imaku_frame, {imaku_frame, start_link, []},
+			transient, 5000, worker, dynamic}
 	],
 	{ok, {{one_for_one, 10, 10}, Procs}}.
