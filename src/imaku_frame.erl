@@ -8,15 +8,16 @@
 -export([init/1, handle_call/3, handle_event/2,
 	handle_info/2, terminate/2, code_change/3]). %% wx_object.
 
--include_lib("wx/include/wx.hrl").
--include_lib("wx/include/gl.hrl").
--include_lib("wx/include/glu.hrl").
-
 -record(state, {
 	frame,
 	canvas,
-	timer
+	timer,
+	game
 }).
+
+-include_lib("wx/include/wx.hrl").
+-include_lib("wx/include/gl.hrl").
+-include_lib("wx/include/glu.hrl").
 
 %% API.
 
@@ -32,8 +33,7 @@ init([]) ->
 	Frame = wxFrame:new(wx:null(), ?wxID_ANY, "imaku", [
 		{size, {960, 540}},
 		{style, ?wxDEFAULT_FRAME_STYLE
-					bxor (?wxRESIZE_BORDER bor ?wxMAXIMIZE_BOX)
-				band ?wxBORDER_NONE}
+					bxor (?wxRESIZE_BORDER bor ?wxMAXIMIZE_BOX)}
 	]),
 	wxFrame:show(Frame),
 
@@ -55,7 +55,7 @@ init([]) ->
 		gl:viewport(0, 0, W, H),
 		gl:matrixMode(?GL_PROJECTION),
 		gl:loadIdentity(),
-		gl:ortho(-2.0, 2.0, -2.0 * H / W, 2.0 * H / W, -20.0, 20.0),
+		glu:ortho2D(0.0, W, 0.0, H),
 		gl:matrixMode(?GL_MODELVIEW),
 		gl:loadIdentity(),
 		gl:enable(?GL_DEPTH_TEST),
@@ -66,9 +66,11 @@ init([]) ->
 
 	wxFrame:layout(Frame),
 
-	Timer = timer:send_interval(16, self(), update),
+	Timer = timer:send_interval(16, self(), loop),
 
-	{Frame, #state{frame=Frame, canvas=Canvas, timer=Timer}}.
+	Game = imaku_game:init(),
+
+	{Frame, #state{frame=Frame, canvas=Canvas, timer=Timer, game=Game}}.
 
 handle_call(_Msg, _From, State) ->
 	{reply, ok, State}.
@@ -78,9 +80,8 @@ handle_event(#wx{event=#wxClose{}}, State) ->
 handle_event(_Event, State) ->
 	{noreply, State}.
 
-handle_info(update, State=#state{canvas=Canvas}) ->
-	gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT),
-	wxGLCanvas:swapBuffers(Canvas),
+handle_info(loop, State=#state{canvas=Canvas, game=Game}) ->
+	imaku_game:loop(Canvas, Game),
 	{noreply, State};
 handle_info(_Msg, State) ->
 	{noreply, State}.
@@ -88,7 +89,8 @@ handle_info(_Msg, State) ->
 code_change(_, _, State) ->
 	{stop, not_yet_implemented, State}.
 
-terminate(_Reason, #state{timer=Timer}) ->
+terminate(_Reason, #state{timer=Timer, game=Game}) ->
+	imaku_game:terminate(Game),
 	timer:cancel(Timer),
 	wx:destroy(),
 	application:stop(imaku).
