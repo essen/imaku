@@ -92,6 +92,10 @@ update_object_actions(Bullets, Object,
 	{Class, Dims, Col} = lists:keyfind(Class, 1, Bullets),
 	New = #bullet{class=Class, color=Col, pos=Pos, dims=Dims, actions=Actions},
 	update_object_actions(Bullets, Object, Tail, [New|Acc]);
+update_object_actions(Bullets, Object = #bullet{vars=Vars},
+		[{speed, VarName}|Tail], Acc) when is_atom(VarName) ->
+	{VarName, Speed} = lists:keyfind(VarName, 1, Vars),
+	update_object_actions(Bullets, Object#bullet{speed=Speed}, Tail, Acc);
 update_object_actions(Bullets, Object, [{speed, Speed}|Tail], Acc) ->
 	update_object_actions(Bullets, Object#bullet{speed=Speed}, Tail, Acc);
 update_object_actions(_Bullets, _Object, [vanish|_Tail], Acc) ->

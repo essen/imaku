@@ -6,8 +6,8 @@
 	%~ vanish
 	%~ {repeat, N, ActionList}
 
-	%~ {dir, Dir}
-	%~ {speed, Speed}
+	%~ {dir, Dir} {dir, VarName}
+	%~ {speed, Speed} {speed, VarName}
 %~ {accel, X, Y}
 
 	%~ {var, Name, Value}
