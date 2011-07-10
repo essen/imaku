@@ -81,8 +81,8 @@ handle_event(_Event, State) ->
 	{noreply, State}.
 
 handle_info(loop, State=#state{canvas=Canvas, game=Game}) ->
-	imaku_game:loop(Canvas, Game),
-	{noreply, State};
+	Game2 = imaku_game:loop(Canvas, Game),
+	{noreply, State#state{game=Game2}};
 handle_info(_Msg, State) ->
 	{noreply, State}.
 
@@ -93,4 +93,4 @@ terminate(_Reason, #state{timer=Timer, game=Game}) ->
 	imaku_game:terminate(Game),
 	timer:cancel(Timer),
 	wx:destroy(),
-	application:stop(imaku).
+	init:stop().
