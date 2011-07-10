@@ -85,6 +85,9 @@ update_object_actions(Bullets, Object = #bullet{vars=Vars},
 	update_object_actions(Bullets, Object#bullet{dir=Dir}, Tail, Acc);
 update_object_actions(Bullets, Object, [{dir, Dir}|Tail], Acc) ->
 	update_object_actions(Bullets, Object#bullet{dir=Dir}, Tail, Acc);
+%% Finish.
+update_object_actions(_Bullets, _Object, [finish|_Tail], _Acc) ->
+	init:stop();
 %% Fire.
 update_object_actions(Bullets, Object, [{fire, Class, Actions}|Tail], Acc) ->
 	{Class, Dims, Col} = lists:keyfind(Class, 1, Bullets),
@@ -128,6 +131,13 @@ update_object_actions(Bullets, Object = #bullet{vars=Vars},
 	{Name, CurrentValue} = lists:keyfind(Name, 1, Vars),
 	Vars2 = lists:keydelete(Name, 1, Vars),
 	Vars3 = [{Name, CurrentValue + AddValue}|Vars2],
+	update_object_actions(Bullets, Object#bullet{vars=Vars3}, Tail, Acc);
+update_object_actions(Bullets, Object = #bullet{vars=Vars},
+		[{var, Name, mul, MulName}|Tail], Acc) when is_atom(MulName) ->
+	{Name, CurrentValue} = lists:keyfind(Name, 1, Vars),
+	{MulName, MulValue} = lists:keyfind(MulName, 1, Vars),
+	Vars2 = lists:keydelete(Name, 1, Vars),
+	Vars3 = [{Name, CurrentValue * MulValue}|Vars2],
 	update_object_actions(Bullets, Object#bullet{vars=Vars3}, Tail, Acc);
 update_object_actions(Bullets, Object = #bullet{vars=Vars},
 		[{var, Name, mul, MulValue}|Tail], Acc) ->
