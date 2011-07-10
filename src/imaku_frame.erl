@@ -21,6 +21,7 @@
 
 %% API.
 
+-spec start_link() -> {ok, pid()}.
 start_link() ->
 	{wx_ref, _N, wxFrame, Pid} = wx_object:start_link(?MODULE, [], []),
 	{ok, Pid}.
@@ -89,8 +90,7 @@ handle_info(_Msg, State) ->
 code_change(_, _, State) ->
 	{stop, not_yet_implemented, State}.
 
-terminate(_Reason, #state{timer=Timer, game=Game}) ->
+terminate(_Reason, #state{game=Game}) ->
 	imaku_game:terminate(Game),
-	timer:cancel(Timer),
 	wx:destroy(),
 	init:stop().

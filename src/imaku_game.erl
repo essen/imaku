@@ -23,6 +23,8 @@
 	vars = []
 }).
 
+%% Just fixing some broken syntax coloration algorithms.
+%% You better thank me, I wouldn't have done that in normal conditions.
 -define(BEGIN, 'begin').
 -define(END, 'end').
 
@@ -42,6 +44,7 @@ init() ->
 	io:format("Ready.~n"),
 	#state{bullets=Bullets, scenes=Scenes, objects=[#bullet{actions=Scene1}]}.
 
+-spec loop(_, #state{}) -> #state{}.
 loop(Canvas, State=#state{bullets=Bullets, objects=Objects, t=T}) ->
 	Objects2 = update_scene(Bullets, Objects),
 	gl:clear(?GL_COLOR_BUFFER_BIT bor ?GL_DEPTH_BUFFER_BIT),
@@ -49,6 +52,7 @@ loop(Canvas, State=#state{bullets=Bullets, objects=Objects, t=T}) ->
 	wxGLCanvas:swapBuffers(Canvas),
 	State#state{objects=Objects2, t=T + 1}.
 
+-spec terminate(#state{}) -> ok.
 terminate(_State) ->
 	ok.
 
