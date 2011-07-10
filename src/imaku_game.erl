@@ -13,7 +13,7 @@
 -record(bullet, {
 	class = generator,
 	color = {0.0, 0.0, 0.0, 0.0},
-	pos = {-10000.0, -10000.0},
+	pos = {1919.0, 1079.0},
 	dims = {1.0, 1.0},
 	dir = 0.0,
 	speed = 0.0,
@@ -68,7 +68,10 @@ update_scene(Bullets, [Object = #bullet{
 	NewObjects = update_object(Bullets, Object2),
 	update_scene(Bullets, Tail, [NewObjects|Acc]).
 
-update_object(_Bullets, Object = #bullet{wait=Wait}) when Wait =/= 0 ->
+update_object(_Bullets, #bullet{pos={X, Y}})
+		when X < -960; X > 1920; Y < -540; Y > 1080 ->
+	[];
+update_object(_Bullets, Object = #bullet{wait=Wait}) when Wait > 0 ->
 	[Object#bullet{wait=Wait - 1}];
 update_object(Bullets, Object = #bullet{actions=Actions}) ->
 	update_object_actions(Bullets, Object, Actions, []).
@@ -133,6 +136,10 @@ update_object_actions(Bullets, Object = #bullet{vars=Vars},
 	Vars3 = [{Name, CurrentValue * MulValue}|Vars2],
 	update_object_actions(Bullets, Object#bullet{vars=Vars3}, Tail, Acc);
 %% Wait.
+update_object_actions(_Bullets, Object = #bullet{vars=Vars},
+		[{wait, Name}|Tail], Acc) when is_atom(Name) ->
+	{Name, Wait} = lists:keyfind(Name, 1, Vars),
+	[Object#bullet{actions=Tail, wait=Wait}|Acc];
 update_object_actions(_Bullets, Object, [{wait, Wait}|Tail], Acc) ->
 	[Object#bullet{actions=Tail, wait=Wait}|Acc].
 

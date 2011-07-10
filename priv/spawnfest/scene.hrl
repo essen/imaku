@@ -16,10 +16,27 @@
 {scene, [
 	{wait, 10},
 	{spawn, basic, {480, 270}, [
-		{var, x, 0},
+		{var, w, 50},
+		{var, x, 0.0},
+
+		%% Pattern 1 part 1 - fixed.
+		{repeat, 40, [
+			{repeat, 18, [
+				{fire, basic, [
+					{speed, 2.0},
+					{dir, x}
+				]},
+				{var, x, add, 30}
+			]},
+			{wait, w},
+			{var, w, add, -1}
+		]},
+
 		{var, y, 31.5},
-		{var, z, -3},
-		{repeat, 5, [
+		{var, z, -3.0},
+
+		%% Pattern 1 part 2 - variable.
+		{repeat, 3, [
 			{repeat, 21, [
 				{repeat, 18, [
 					{fire, basic, [
@@ -32,6 +49,7 @@
 				{var, y, add, z}
 			]},
 			{var, z, mul, -1}
-		]}
+		]},
+		vanish
 	]}
 ]}.
