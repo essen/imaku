@@ -74,36 +74,50 @@ update_object(Bullets, Object = #bullet{actions=Actions}) ->
 
 update_object_actions(_Bullets, Object, [], Acc) ->
 	[Object#bullet{actions=[]}|Acc];
+%% Direction.
 update_object_actions(Bullets, Object = #bullet{vars=Vars},
 		[{dir, VarName}|Tail], Acc) when is_atom(VarName) ->
 	{VarName, Dir} = lists:keyfind(VarName, 1, Vars),
 	update_object_actions(Bullets, Object#bullet{dir=Dir}, Tail, Acc);
 update_object_actions(Bullets, Object, [{dir, Dir}|Tail], Acc) ->
 	update_object_actions(Bullets, Object#bullet{dir=Dir}, Tail, Acc);
+%% Fire.
 update_object_actions(Bullets, Object, [{fire, Class, Actions}|Tail], Acc) ->
 	{Class, Dims, Col} = lists:keyfind(Class, 1, Bullets),
 	New = Object#bullet{class=Class, color=Col, dims=Dims, actions=Actions},
 	update_object_actions(Bullets, Object, Tail, [New|Acc]);
+%% Repeat.
 update_object_actions(Bullets, Object, [{repeat, N, Actions}|Tail], Acc) ->
 	Expanded = [Actions || _I <- lists:seq(1, N)],
 	update_object_actions(Bullets, Object, lists:flatten([Expanded|Tail]), Acc);
+%% Spawn.
 update_object_actions(Bullets, Object,
 		[{spawn, Class, Pos, Actions}|Tail], Acc) ->
 	{Class, Dims, Col} = lists:keyfind(Class, 1, Bullets),
 	New = #bullet{class=Class, color=Col, pos=Pos, dims=Dims, actions=Actions},
 	update_object_actions(Bullets, Object, Tail, [New|Acc]);
+%% Speed.
 update_object_actions(Bullets, Object = #bullet{vars=Vars},
 		[{speed, VarName}|Tail], Acc) when is_atom(VarName) ->
 	{VarName, Speed} = lists:keyfind(VarName, 1, Vars),
 	update_object_actions(Bullets, Object#bullet{speed=Speed}, Tail, Acc);
 update_object_actions(Bullets, Object, [{speed, Speed}|Tail], Acc) ->
 	update_object_actions(Bullets, Object#bullet{speed=Speed}, Tail, Acc);
+%% Vanish.
 update_object_actions(_Bullets, _Object, [vanish|_Tail], Acc) ->
 	Acc;
+%% Variables.
 update_object_actions(Bullets, Object = #bullet{vars=Vars},
 		[{var, Name, Value}|Tail], Acc) ->
 	Vars2 = lists:keydelete(Name, 1, Vars),
 	Vars3 = [{Name, Value}|Vars2],
+	update_object_actions(Bullets, Object#bullet{vars=Vars3}, Tail, Acc);
+update_object_actions(Bullets, Object = #bullet{vars=Vars},
+		[{var, Name, add, AddName}|Tail], Acc) when is_atom(AddName)->
+	{Name, CurrentValue} = lists:keyfind(Name, 1, Vars),
+	{AddName, AddValue} = lists:keyfind(AddName, 1, Vars),
+	Vars2 = lists:keydelete(Name, 1, Vars),
+	Vars3 = [{Name, CurrentValue + AddValue}|Vars2],
 	update_object_actions(Bullets, Object#bullet{vars=Vars3}, Tail, Acc);
 update_object_actions(Bullets, Object = #bullet{vars=Vars},
 		[{var, Name, add, AddValue}|Tail], Acc) ->
@@ -111,7 +125,13 @@ update_object_actions(Bullets, Object = #bullet{vars=Vars},
 	Vars2 = lists:keydelete(Name, 1, Vars),
 	Vars3 = [{Name, CurrentValue + AddValue}|Vars2],
 	update_object_actions(Bullets, Object#bullet{vars=Vars3}, Tail, Acc);
-%% @todo getting value for use in speed/dir/...
+update_object_actions(Bullets, Object = #bullet{vars=Vars},
+		[{var, Name, mul, MulValue}|Tail], Acc) ->
+	{Name, CurrentValue} = lists:keyfind(Name, 1, Vars),
+	Vars2 = lists:keydelete(Name, 1, Vars),
+	Vars3 = [{Name, CurrentValue * MulValue}|Vars2],
+	update_object_actions(Bullets, Object#bullet{vars=Vars3}, Tail, Acc);
+%% Wait.
 update_object_actions(_Bullets, Object, [{wait, Wait}|Tail], Acc) ->
 	[Object#bullet{actions=Tail, wait=Wait}|Acc].
 
