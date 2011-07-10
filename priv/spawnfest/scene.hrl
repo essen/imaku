@@ -15,10 +15,10 @@
 
 {scene, [
 	{wait, 10},
-	{spawn, basic, {480.0, 270.0}, [
+	{spawn, basic, {480, 270}, [
 		{var, x, 0},
 		{var, y, 31.5},
-		{var, z, -3.0},
+		{var, z, -3},
 		{repeat, 5, [
 			{repeat, 21, [
 				{repeat, 18, [

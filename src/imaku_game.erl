@@ -61,8 +61,9 @@ update_scene(_Bullets, [], Acc) ->
 update_scene(Bullets, [Object = #bullet{
 		pos={X, Y}, dir=Dir, speed=Speed}|Tail], Acc) ->
 	Dir2 = Dir - 90.0,
-	X2 = X + Speed * math:cos(math:pi() * Dir2 / 180.0),
-	Y2 = Y + Speed * math:sin(math:pi() * Dir2 / 180.0),
+	A = math:pi() * Dir2 / 180.0,
+	X2 = X + Speed * math:cos(A),
+	Y2 = Y + Speed * math:sin(A),
 	Object2 = Object#bullet{pos={X2, Y2}},
 	NewObjects = update_object(Bullets, Object2),
 	update_scene(Bullets, Tail, [NewObjects|Acc]).
@@ -140,11 +141,15 @@ draw_scene([]) ->
 draw_scene([#bullet{color={R, G, B, A}, pos={X, Y}, dims={W, H}}|Tail]) ->
 	W2 = W / 2,
 	H2 = H / 2,
+	X1 = X - W2,
+	X2 = X + W2,
+	Y1 = Y - H2,
+	Y2 = Y + H2,
 	gl:color4f(R, G, B, A),
 	gl:?BEGIN(?GL_QUADS),
-		gl:vertex2f(X - W2, Y - H2),
-		gl:vertex2f(X + W2, Y - H2),
-		gl:vertex2f(X + W2, Y + H2),
-		gl:vertex2f(X - W2, Y + H2),
+		gl:vertex2f(X1, Y1),
+		gl:vertex2f(X2, Y1),
+		gl:vertex2f(X2, Y2),
+		gl:vertex2f(X1, Y2),
 	gl:?END(),
 	draw_scene(Tail).
